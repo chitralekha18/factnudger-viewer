@@ -1,5 +1,8 @@
+const publicSite = document.querySelector('meta[name=app-mode]')?.content === 'public';
+let searchKey = '';
+const searchCache = new Map();
 const $ = id => document.getElementById(id);
-const demos = [1,2].map(n=>({kind:'local',id:String(n),title:`Video ${n}`,author:'FactNudger demo collection',thumbnail:`/media/poster${n}.jpg`,src:`/media/video${n}.mp4`,driveId:['1d0OLtSKM-egUq5b3Zh8bu8-u5RuOJ-ga','1AkcGXUMOWT7UATB0rO40B4LXZYxTduJp'][n-1]}));
+const demos = [1,2].map(n=>({kind:'local',id:String(n),title:`Video ${n}`,author:'FactNudger demo collection',thumbnail:`./media/poster${n}.jpg`,src:`./media/video${n}.mp4`,driveId:['1d0OLtSKM-egUq5b3Zh8bu8-u5RuOJ-ga','1AkcGXUMOWT7UATB0rO40B4LXZYxTduJp'][n-1]}));
 const historyKey='factnudger-viewer-history-v1';
 let history=[];
 try { history=JSON.parse(localStorage.getItem(historyKey)||'[]').filter(v=>v && typeof v.title==='string' && ((v.kind==='youtube' && /^[\w-]{11}$/.test(v.id)) || (v.kind==='tiktok' && /^\d{10,25}$/.test(v.id)))).slice(0,20); } catch {}
@@ -34,7 +37,9 @@ function select(item,play=false){
   $('player').replaceChildren();current=item;$('playback-status').textContent='';
   $('video-title').textContent=item.title;
   $('external-link').hidden=item.kind==='local';
-  if(item.kind==='local'){
+  if(item.kind==='local' && publicSite){
+    onlineFallback(item);
+  }else if(item.kind==='local'){
     const video=document.createElement('video');video.src=item.src;video.poster=item.thumbnail;video.controls=true;video.playsInline=true;video.preload='metadata';video.volume=1;
     video.addEventListener('error',()=>{if(token===generation)onlineFallback(item);});
     $('player').append(video);
@@ -50,7 +55,7 @@ function select(item,play=false){
     }
     $('player').append(iframe);
     $('playback-status').textContent='';
-    if(item.kind==='youtube'){loadYouTube();attachYouTube(token);}
+    if(item.kind==='youtube' && !publicSite){loadYouTube();attachYouTube(token);}
     history=[{kind:item.kind,id:item.id,title:item.title,author:item.author||''},...history.filter(v=>!(v.kind===item.kind&&v.id===item.id))].slice(0,20);saveHistory();
   }
   $('results-panel').hidden=true;renderLibrary();
@@ -102,10 +107,27 @@ async function search(){
   if(/^(https?:\/\/|www\.|(?:vm\.|vt\.|m\.)?tiktok\.com|youtu)/i.test(query)){
     $('search-status').textContent='Paste a full YouTube video link or TikTok link containing /video/. For a shortened TikTok share link, open it first and copy the full address.';return;
   }
+  if(publicSite && !searchKey){$('key-dialog').showModal();$('api-key').focus();return;}
   $('search-button').disabled=true;$('search-status').textContent='Finding videos on YouTube…';
   try{
-    const response=await fetch(`/api/search?q=${encodeURIComponent(query)}`,{signal:controller.signal});const data=await response.json();
-    if(!response.ok)throw new Error(data.error||'Search is unavailable. Try again.');
+    let data;
+    if(publicSite){
+      const cached=searchCache.get(query.toLowerCase());
+      if(cached && Date.now()-cached.time<900000){data=cached.data;}
+      else{
+        const params=new URLSearchParams({part:'snippet',type:'video',videoEmbeddable:'true',videoSyndicated:'true',maxResults:'12',q:query});
+        const response=await fetch('https://www.googleapis.com/youtube/v3/search?'+params,{headers:{'X-Goog-Api-Key':searchKey},signal:controller.signal,credentials:'omit'});
+        const result=await response.json();
+        if(!response.ok)throw new Error(response.status===403 ? 'Search is unavailable. Check the key’s website/API restrictions and daily quota.' : 'Search failed. Check your API key or try again.');
+        data={items:(result.items||[]).filter(v=>v.id?.videoId).map(v=>({kind:'youtube',id:v.id.videoId,title:v.snippet.title,author:v.snippet.channelTitle}))};
+        if(searchCache.size>=100)searchCache.clear();
+        searchCache.set(query.toLowerCase(),{time:Date.now(),data});
+      }
+    }else{
+      const response=await fetch(`/api/search?q=${encodeURIComponent(query)}`,{signal:controller.signal});data=await response.json();
+      if(!response.ok)throw new Error(data.error||'Search is unavailable. Try again.');
+    }
+    if(controller.signal.aborted)return;
     const items=data.items.map(v=>({...v,title:decode(v.title),author:decode(v.author)}));
     $('results-title').textContent=`Results for “${query}”`;$('results').replaceChildren(...items.map(v=>card(v,true)));$('results-panel').hidden=false;
     $('search-status').textContent=items.length?'':'No videos found. Try a different topic.';
@@ -117,4 +139,13 @@ document.querySelectorAll('[data-topic]').forEach(button=>button.addEventListene
 $('close-results').addEventListener('click',()=>{$('results-panel').hidden=true;});
 $('clear-history').addEventListener('click',()=>{history=[];saveHistory();renderLibrary();});
 $('reset').addEventListener('click',()=>{searchController?.abort();history=[];saveHistory();$('query').value='';$('search-status').textContent='';$('search-button').disabled=false;select(demos[0]);window.scrollTo({top:0,behavior:'smooth'});});
+if(publicSite){
+  $('key-settings').hidden=false;
+  $('key-settings').addEventListener('click',()=>{$('api-key').value='';$('key-dialog').showModal();$('api-key').focus();});
+  $('key-dialog').addEventListener('close',()=>{$('api-key').value='';});
+  $('key-cancel').addEventListener('click',()=>{$('key-dialog').close();});
+  $('key-clear').addEventListener('click',()=>{searchController?.abort();searchKey='';searchCache.clear();$('key-settings').textContent='Search key';$('key-dialog').close();$('search-status').textContent='Search key removed.';});
+  $('key-form').addEventListener('submit',event=>{event.preventDefault();const value=$('api-key').value.trim();if(!value){$('api-key').focus();return;}searchController?.abort();searchKey=value;searchCache.clear();$('api-key').value='';$('key-dialog').close();$('key-settings').textContent='Search key ✓';$('search-status').textContent='';if($('query').value.trim())search();});
+  window.addEventListener('pagehide',()=>{searchController?.abort();searchKey='';searchCache.clear();$('api-key').value='';$('key-settings').textContent='Search key';});
+}
 select(demos[0]);

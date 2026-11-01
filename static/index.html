@@ -1,8 +1,8 @@
 <!doctype html>
 <html lang="en">
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>FactNudger</title><link rel="stylesheet" href="/style.css"><script src="/app.js" defer></script></head>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>FactNudger</title><link rel="stylesheet" href="./style.css"><script src="./app.js" defer></script></head>
 <body>
-<header class="topbar"><a class="brand" href="/">FactNudger<span>UIST 2026</span></a><button id="reset" class="text-button" title="Stop playback and clear recent videos">↺ Reset</button></header>
+<header class="topbar"><a class="brand" href="./">FactNudger<span>UIST 2026</span></a><div class="header-actions"><button id="key-settings" class="text-button" hidden>Search key</button><button id="reset" class="text-button" title="Stop playback and clear recent videos">↺ Reset</button></div></header>
 <div class="layout">
 <aside class="sidebar" aria-label="Video library"><h2>Demo videos</h2><div id="demos"></div><section id="recent-section" hidden><div class="recent-heading"><h2>Recent</h2><button id="clear-history" class="text-button">Clear</button></div><div id="history"></div></section></aside>
 <main>
@@ -12,4 +12,5 @@
 <section class="watch-section" aria-label="Video player"><div id="player-shell"><div id="player"></div></div><div class="video-details"><h1 id="video-title">Video 1</h1><a id="external-link" target="_blank" rel="noopener noreferrer" hidden>Open original ↗</a></div><p id="playback-status" role="status" aria-live="polite"></p></section>
 </main>
 </div>
+<dialog id="key-dialog" aria-labelledby="key-title"><form id="key-form"><h2 id="key-title">YouTube search key</h2><p>Used only in this tab and sent directly to Google. Cleared when you reload or leave.</p><label for="api-key">Your API key</label><input id="api-key" type="password" autocomplete="off" spellcheck="false" placeholder="Paste your YouTube API key"><p>Use a key restricted to YouTube Data API v3 and this website. Videos and pasted links work without a key.</p><div class="dialog-actions"><button type="button" id="key-clear" class="text-button">Remove key</button><button type="button" id="key-cancel" class="text-button">Cancel</button><button type="submit" class="primary-button">Use key</button></div></form></dialog>
 </body></html>

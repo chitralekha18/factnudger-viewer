@@ -41,3 +41,13 @@ The two pinned demos prefer the local MP4 copies. If a local file is missing or 
 - Video 2: https://drive.google.com/file/d/1AkcGXUMOWT7UATB0rO40B4LXZYxTduJp/view
 
 The interface uses a black background with navy accents and bold sans-serif branding adapted from the UIST poster.
+
+## Public GitHub Pages version
+
+The public site is built into `docs/` by `python3 build_pages.py`. Publish only that folder from the main branch. The build copies an explicit allowlist: HTML, CSS, JavaScript, and the two thumbnails. It never reads `.env`, publishes the Python server, or includes local movies. Rebuild after frontend edits.
+
+On Pages, demo videos use Google Drive and pasted YouTube/TikTok links work without a key. Topic search asks each visitor for their own YouTube Data API key. The key stays in tab memory, is sent only to Google in an HTTP header, and is cleared on reload/navigation or Remove key. It is not stored in localStorage, cookies, GitHub, or page URLs. Recently played video metadata still uses localStorage. No third-party JavaScript runs in the public page's own origin; video providers load in cross-origin frames.
+
+Client-side keys are observable by the person using the browser and are not secrets. For a controlled demo, create a dedicated key, restrict its API access to YouTube Data API v3, and restrict its website referrers to `https://chitralekha18.github.io/*`. Browsers typically send just the origin for cross-origin API requests, so a restriction to only the repository path may fail. Set an appropriate quota and revoke the demo key afterward. Never embed a shared key in this build or distribute an unrestricted key. A public service with shared, keyless search requires a separate backend with rate limiting and abuse controls; GitHub Pages cannot run the Python server.
+
+The repository can remain private if the GitHub account's plan supports Pages from private repositories. The published frontend and demo-video links are public.
