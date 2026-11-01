@@ -31,22 +31,19 @@ The server binds only to this computer (127.0.0.1) and serves an explicit list o
 
 ## Prepare the two demo files
 
-If the media folder is empty, first mark both original MOV files **Make available offline** in Dropbox/Finder and wait for their downloads to finish. Then run `python3 prepare_media.py` from this folder (FFmpeg must be installed). The script creates MP4 copies and thumbnails without changing the originals. H.264 video is remuxed when compatible; other codecs are converted. An optional argument supplies a different source folder. Reload the viewing page after preparation.
+If the media folder is empty, first mark both original MOV files **Make available offline** in Dropbox/Finder and wait for their downloads to finish. Then run `python3 prepare_media.py` from this folder (FFmpeg must be installed). The script creates MP4 copies and thumbnails without changing the originals. H.264 video is remuxed when compatible; other codecs are converted. The published site uses smaller 720p H.264/AAC copies. An optional argument supplies a different source folder. Reload the viewing page after preparation.
 
-## Online demo fallback
+## Demo video playback
 
-The two pinned demos prefer the local MP4 copies. If a local file is missing or fails to load, the player automatically switches to the corresponding Google Drive preview. Online playback needs internet and may require pressing Play inside the embedded player. Open original is available if Drive cannot play inline.
-
-- Video 1: https://drive.google.com/file/d/1d0OLtSKM-egUq5b3Zh8bu8-u5RuOJ-ga/view
-- Video 2: https://drive.google.com/file/d/1AkcGXUMOWT7UATB0rO40B4LXZYxTduJp/view
+Both pinned demos play directly from browser-compatible MP4 files hosted with the site, avoiding Google Drive embedded-player failures. The original Drive links remain available if a video cannot load.
 
 The interface uses a black background with navy accents and bold sans-serif branding adapted from the UIST poster.
 
 ## Public GitHub Pages version
 
-The public site is built into `docs/` by `python3 build_pages.py`. Publish only that folder from the main branch. The build copies an explicit allowlist: HTML, CSS, JavaScript, and the two thumbnails. It never reads `.env`, publishes the Python server, or includes local movies. Rebuild after frontend edits.
+The public site is built into `docs/` by `python3 build_pages.py`. Publish only that folder from the main branch. The build copies an explicit allowlist: HTML, CSS, JavaScript, the two thumbnails, and two compressed demo MP4s. It never reads `.env` or publishes the Python server. Original MOV files remain excluded. Rebuild after frontend edits.
 
-On Pages, demo videos use Google Drive and pasted YouTube/TikTok links work without a key. Topic search asks each visitor for their own YouTube Data API key. The key stays in tab memory, is sent only to Google in an HTTP header, and is cleared on reload/navigation or Remove key. It is not stored in localStorage, cookies, GitHub, or page URLs. Recently played video metadata still uses localStorage. No third-party JavaScript runs in the public page's own origin; video providers load in cross-origin frames.
+On Pages, demo videos use the hosted MP4s and pasted YouTube/TikTok links work without a key. Topic search asks each visitor for their own YouTube Data API key. The key stays in tab memory, is sent only to Google in an HTTP header, and is cleared on reload/navigation or Remove key. It is not stored in localStorage, cookies, GitHub, or page URLs. Recently played video metadata still uses localStorage. No third-party JavaScript runs in the public page's own origin; video providers load in cross-origin frames.
 
 Client-side keys are observable by the person using the browser and are not secrets. For a controlled demo, create a dedicated key, restrict its API access to YouTube Data API v3, and restrict its website referrers to `https://chitralekha18.github.io/*`. Browsers typically send just the origin for cross-origin API requests, so a restriction to only the repository path may fail. Set an appropriate quota and revoke the demo key afterward. Never embed a shared key in this build or distribute an unrestricted key. A public service with shared, keyless search requires a separate backend with rate limiting and abuse controls; GitHub Pages cannot run the Python server.
 

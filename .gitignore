@@ -8,3 +8,6 @@ __pycache__/
 media/*.mp4
 media/*.mov
 media/*.MOV
+
+!docs/media/video1.mp4
+!docs/media/video2.mp4

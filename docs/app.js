@@ -37,11 +37,9 @@ function select(item,play=false){
   $('player').replaceChildren();current=item;$('playback-status').textContent='';
   $('video-title').textContent=item.title;
   $('external-link').hidden=item.kind==='local';
-  if(item.kind==='local' && publicSite){
-    onlineFallback(item);
-  }else if(item.kind==='local'){
+  if(item.kind==='local'){
     const video=document.createElement('video');video.src=item.src;video.poster=item.thumbnail;video.controls=true;video.playsInline=true;video.preload='metadata';video.volume=1;
-    video.addEventListener('error',()=>{if(token===generation)onlineFallback(item);});
+    video.addEventListener('error',()=>{if(token!==generation)return;$('playback-status').textContent='Video could not load. Try again or open the original.';$('external-link').href=`https://drive.google.com/file/d/${item.driveId}/view`;$('external-link').hidden=false;});
     $('player').append(video);
     if(play)video.play().catch(()=>{if(token===generation && $('player').contains(video))$('playback-status').textContent='Press Play to begin.';});
   }else{
@@ -59,14 +57,6 @@ function select(item,play=false){
     history=[{kind:item.kind,id:item.id,title:item.title,author:item.author||''},...history.filter(v=>!(v.kind===item.kind&&v.id===item.id))].slice(0,20);saveHistory();
   }
   $('results-panel').hidden=true;renderLibrary();
-}
-function onlineFallback(item){
-  const iframe=document.createElement('iframe');iframe.title=item.title;
-  iframe.src=`https://drive.google.com/file/d/${item.driveId}/preview`;
-  iframe.allow='autoplay; fullscreen';iframe.allowFullscreen=true;
-  $('player').replaceChildren(iframe);$('playback-status').textContent='';
-  $('external-link').href=`https://drive.google.com/file/d/${item.driveId}/view`;
-  $('external-link').hidden=false;
 }
 function attachYouTube(token){
   if(!window.YT?.Player)return;
