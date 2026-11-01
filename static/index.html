@@ -1,0 +1,15 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>FactNudger</title><link rel="stylesheet" href="/style.css"><script src="/app.js" defer></script></head>
+<body>
+<header class="topbar"><a class="brand" href="/">FactNudger<span>UIST 2026</span></a><button id="reset" class="text-button" title="Stop playback and clear recent videos">↺ Reset</button></header>
+<div class="layout">
+<aside class="sidebar" aria-label="Video library"><h2>Demo videos</h2><div id="demos"></div><section id="recent-section" hidden><div class="recent-heading"><h2>Recent</h2><button id="clear-history" class="text-button">Clear</button></div><div id="history"></div></section></aside>
+<main>
+<form id="search-form" role="search"><label class="sr-only" for="query">Search YouTube or paste a video link</label><svg aria-hidden="true" viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5"/></svg><input id="query" type="search" placeholder="Search YouTube or paste a link" maxlength="300" autocomplete="off"><button type="submit" id="search-button">Search</button></form>
+<div id="search-status" role="status" aria-live="polite"></div>
+<section id="results-panel" hidden><div class="results-heading"><h2 id="results-title">Results</h2><button id="close-results" class="text-button">Close ×</button></div><div id="results"></div></section>
+<section class="watch-section" aria-label="Video player"><div id="player-shell"><div id="player"></div></div><div class="video-details"><h1 id="video-title">Video 1</h1><a id="external-link" target="_blank" rel="noopener noreferrer" hidden>Open original ↗</a></div><p id="playback-status" role="status" aria-live="polite"></p></section>
+</main>
+</div>
+</body></html>
