@@ -2,6 +2,7 @@
 """Build GitHub Pages from an explicit allowlist. Never reads .env."""
 from pathlib import Path
 import shutil
+import hashlib
 ROOT=Path(__file__).resolve().parent
 OUT=ROOT/'docs'
 OUT.mkdir(exist_ok=True)
@@ -9,6 +10,9 @@ OUT.mkdir(exist_ok=True)
 for name in ('app.js','style.css'):
     shutil.copyfile(ROOT/'static'/name,OUT/name)
 html=(ROOT/'static/index.html').read_text()
+for asset in ('app.js','style.css'):
+    version=hashlib.sha256((OUT/asset).read_bytes()).hexdigest()[:12]
+    html=html.replace('./'+asset, './'+asset+'?v='+version)
 html=html.replace('<head>','''<head><meta name="app-mode" content="public"><meta name="referrer" content="strict-origin-when-cross-origin"><meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' https://i.ytimg.com; media-src 'self'; connect-src https://www.googleapis.com; frame-src https://www.youtube.com https://www.tiktok.com https://drive.google.com; object-src 'none'; base-uri 'self'; form-action 'none'">''')
 (OUT/'index.html').write_text(html)
 (OUT/'.nojekyll').touch()
